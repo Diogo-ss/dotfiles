@@ -15,4 +15,5 @@ npm install -g live-server
 git clone git@github.com:Diogo-ss/dotfiles.git
 cd dotfiles
 mv * ~/.config
+ln -s ~/.config/zsh/.zshrc ~/.zshrc
 ```
