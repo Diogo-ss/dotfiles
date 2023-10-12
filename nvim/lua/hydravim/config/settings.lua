@@ -37,18 +37,24 @@ local default_options = {
     loaded_netrwPlugin = 1,
     hydravim = {
       dirs = {
+        -- Path to user configuration directory.
         user = vim.fn.stdpath "config" .. "/lua/user",
+        -- Path to Hydravim data directory.
         data = data,
       },
       ui = {
+        -- Theme configuration. Supports function, string or 'false' to disable themes.
         theme = "catppuccin-mocha",
-        dash = true,
       },
       repository = {
+        -- Branch for the base configuration.
         branch = "main",
+        -- Remote repository for the base configuration (user/repo).
         remote = "HydraVim/HydraVim",
         user_config = {
+          -- Branch for user configuration.
           branch = "1.5",
+          -- Remote repository for user configuration (user/repo).
           remote = "HydraVim/user-config",
         },
       },
@@ -60,6 +66,7 @@ local default_options = {
           { import = "hydravim.plugins.git" },
           { import = "hydravim.plugins.lsp" },
           { import = "hydravim.plugins.ui" },
+          -- Verify the existence of the 'user.plugins' folder and load it if present.
           vim.api.nvim_get_runtime_file("lua/user/plugins/", false)[1] and { import = "user.plugins" },
         },
         ui = {

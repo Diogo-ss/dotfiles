@@ -9,7 +9,7 @@ local api = require "hydravim.core.utils.api"
 local function get_session_file()
   local current_dir = vim.fs.normalize(vim.fn.getcwd())
   local session_dir = vim.fs.normalize(vim.g.hydravim.dirs.data .. "/session")
-  local session_file = session_dir .. "/" .. current_dir:gsub("/", "%%") .. ".vim"
+  local session_file = session_dir .. "/" .. current_dir:gsub("[^a-z0-9]", "%%") .. ".vim"
   return session_file
 end
 

@@ -1,0 +1,6 @@
+.ccls-cache
+.session/
+.luarc.json
+__pycache__
+lua/user
+lazy-lock.json

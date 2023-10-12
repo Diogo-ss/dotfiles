@@ -9,6 +9,21 @@ function M.count_args()
   return #vim.fn.argv()
 end
 
+-- Merge multiple tables and values into a single table.
+-- Using `vim.list_extend`, which preserves the order of elements.
+-- @param ... Tables and values to merge.
+-- @return A single table containing the merged elements.
+function M.merge_tables(...)
+  local result = {}
+
+  for _, value in pairs { ... } do
+    local tbl = type(value) == "table" and value or { value }
+    result = vim.list_extend(result, tbl)
+  end
+
+  return result
+end
+
 --- Duplicate the current line and place it above or below.
 -- @param direction The direction to place the duplicated line ("up" or "down").
 function M.duplicate_line(direction)
@@ -105,11 +120,15 @@ end
 -- @param ft (string) The file type for which sources are needed.
 -- @return (table) A table containing information about available sources; names and supported methods.
 function M.null_ls_sources(ft)
-  local available = require("null-ls.sources").get_available(ft)
   local sources = {}
 
-  for _, source in pairs(available) do
-    table.insert(sources, { name = source.name, methods = source.methods })
+  local ok, _ = pcall(require, "null-ls")
+
+  if ok then
+    local available = require("null-ls.sources").get_available(ft)
+    for _, source in pairs(available) do
+      table.insert(sources, { name = source.name, methods = source.methods })
+    end
   end
 
   return sources
@@ -149,22 +168,20 @@ end
 -- @return (string) The name of the LSP or an empty string if no LSP is active for the filetype.
 function M.get_lsp_clients()
   local ft = vim.bo.filetype
-  local client_names = {}
+  local clients = {}
 
   for _, client in ipairs(vim.lsp.get_active_clients()) do
     if client.config.filetypes and vim.fn.index(client.config.filetypes, ft) ~= -1 then
       if client.name ~= "null-ls" then
-        table.insert(client_names, client.name)
+        table.insert(clients, client.name)
       end
     end
   end
 
-  vim.list_extend(client_names, M.null_ls_formatters(ft))
-  vim.list_extend(client_names, M.null_ls_linters(ft))
+  local formatters, linters = M.null_ls_formatters(ft), M.null_ls_linters(ft)
+  clients = vim.fn.uniq(M.merge_tables(clients, formatters, linters))
 
-  client_names = vim.fn.uniq(client_names)
-
-  return #client_names > 0 and " " .. table.concat(client_names, ", ") or ""
+  return #clients > 0 and " " .. table.concat(clients, ", ") or ""
 end
 
 --- Reads the contents of a file.

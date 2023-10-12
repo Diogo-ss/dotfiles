@@ -1,0 +1,25 @@
+name: luacheck
+on:
+  push:
+    paths:
+      - "**.lua"
+  pull_request:
+    paths:
+      - "**.lua"
+  workflow_call:
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+      - name: Install luarocks and luacheck
+        run: |
+          sudo apt-get update
+          sudo apt-get install -yq luarocks
+          sudo luarocks install luacheck
+      - name: Create luacheck configuration file
+        run: echo 'globals = { "vim" }' > .luacheckrc
+      - name: Run luacheck
+        run: |
+          find . -type f -name "*.lua" -exec luacheck {} +

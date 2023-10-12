@@ -1,0 +1,43 @@
+name: Update lockfile
+
+on:
+  schedule:
+    - cron: '0 0 * * 1'
+    
+jobs:
+  update-lockfile:
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - name: Set up Neovim
+        uses: MunifTanjim/setup-neovim-action@v1
+
+      - name: Update lockfile
+        run: |
+          git clone https://github.com/${GITHUB_REPOSITORY}.git --depth 1 ~/.config/nvim
+          nvim --clean --headless +"lua dofile(vim.fn.stdpath 'config' .. '/lua/hydravim/core/utils/api.lua').generate_lockfile()" +qa
+
+          output=$(nvim --headless +qa 2>&1)
+
+          if [[ -n "$output" ]]; then
+            echo "Warning when starting nvim: $output"
+            exit 1
+          else
+            echo "No warnings found"
+          fi
+
+      - name: Commit files
+        run: |
+          cd ~/.config/nvim
+
+          curl -O -L https://github.com/JohnnyMorganz/StyLua/releases/download/v0.17.1/stylua-linux-x86_64.zip
+          unzip stylua-linux-x86_64.zip
+          chmod +x stylua
+          ./stylua lua/hydravim/core/lockfile.lua
+          rm stylua stylua-linux-x86_64.zip
+
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git config user.name "github-actions[bot]"
+          git remote set-url origin https://x-access-token:${{ secrets.GH_TOKEN }}@github.com/${GITHUB_REPOSITORY}.git
+          git add .
+          git diff --quiet && git diff --staged --quiet || (git commit -a -m "chore(lockfile): update lockfile [action]"; git push origin HEAD:${GITHUB_REF})
